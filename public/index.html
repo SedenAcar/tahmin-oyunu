@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tahmin Oyunu</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #app {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Tahmin Oyunu</h1>
+        <p v-if="!oyunBasladi">1 ile 100 arasında bir sayı tahmin edin.</p>
+        <p v-if="oyunBasladi">Kalan süre: {{ kalanSure }} saniye</p>
+        <input v-model.number="tahmin" type="number" :disabled="!oyunBasladi">
+        <button @click="tahminEt" :disabled="!oyunBasladi">Tahmin Et</button>
+        <button @click="oyunuBaslat" v-if="!oyunBasladi">Oyunu Başlat</button>
+        <p>{{ mesaj }}</p>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted, onUnmounted } = Vue;
+
+        createApp({
+            setup() {
+                const hedefSayi = ref(0);
+                const tahmin = ref(null);
+                const mesaj = ref('');
+                const oyunBasladi = ref(false);
+                const kalanSure = ref(60);
+                let timer;
+
+                const rastgeleSayiUret = () => {
+                    return Math.floor(Math.random() * 100) + 1;
+                };
+
+                const oyunuBaslat = () => {
+                    hedefSayi.value = rastgeleSayiUret();
+                    oyunBasladi.value = true;
+                    kalanSure.value = 60;
+                    mesaj.value = '';
+                    timer = setInterval(() => {
+                        kalanSure.value--;
+                        if (kalanSure.value === 0) {
+                            clearInterval(timer);
+                            oyunBasladi.value = false;
+                            mesaj.value = `Süre doldu! Doğru sayı ${hedefSayi.value} idi.`;
+                        }
+                    }, 1000);
+                };
+
+                const tahminEt = () => {
+                    if (tahmin.value === hedefSayi.value) {
+                        mesaj.value = 'Tebrikler! Doğru tahmin ettiniz.';
+                        clearInterval(timer);
+                        oyunBasladi.value = false;
+                    } else if (tahmin.value < hedefSayi.value) {
+                        mesaj.value = 'Daha yüksek bir sayı deneyin.';
+                    } else {
+                        mesaj.value = 'Daha düşük bir sayı deneyin.';
+                    }
+                };
+
+                onUnmounted(() => {
+                    clearInterval(timer);
+                });
+
+                return {
+                    tahmin,
+                    mesaj,
+                    oyunBasladi,
+                    kalanSure,
+                    tahminEt,
+                    oyunuBaslat
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
